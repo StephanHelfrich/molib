@@ -1,24 +1,25 @@
 # Molib: General Exact and Approximation Methods for Multiobjective Combinatorial Optimization Problems in Python
 
-This repository offers a framework for the approximation of multiobjective combinatorial optimization problems. 
-It covers a variety of algorithms that
-- are applicable under mild assumptions,
-- return solution sets that constitute multiobjective (convex) approxiamtion sets with provable worst-case approximation guarantee,
-- have provable asymptotic worst-case running-times.
+The software and data in this repository is used in the research reported on in the paper [[1]](#1).
 
+## Cite
 
-For a proper introduction into and a recent survey of approximation of multiobjective optimization, we refer to [[1]](#1).
+To cite the contents of this repository, please cite the paper
 
-##  Citing
+[[1]](#1)
 
-to cite this package, pleas use the following publication:
-S. Helfrich. "Approximation and Scalarization in Multiobjective Optimization". PhD Thesis, RPTU Kaiserslautern-Landau. 2023.
+## Description
+
+Convex approximation sets for multiobjective optimization problems are a well-studied relaxation of the common notion of approximation sets. Instead of approximating each image of a feasible solution by the image of some solution in the approximation set up to a multiplicative factor in each component, a convex approximation set only requires this multiplicative approximation to be achieved by some convex combination of finitely many images of solutions in the set. This makes convex approximation sets efficiently computable for a wide range of multiobjective problems - even for many problems for which (classic) approximations sets are hard to compute.
+In this article, we propose a polynomial-time algorithm to compute convex approximation sets that builds upon an exact or approximate algorithm for the weighted sum scalarization and is, therefore, applicable to a large variety of multiobjective optimization problems. The provided convex approximation quality is arbitrarily close to the approximation quality of the underlying algorithm for the weighted sum scalarization. In essence, our algorithm can be interpreted as an approximate variant of the dual variant of Benson's Outer Approximation Algorithm. Thus, in contrast to existing convex approximation algorithms from the literature, information on solutions obtained during the approximation process is utilized to significantly reduce both the practical running time and the cardinality of the returned solution sets while still guaranteeing the same worst-case approximation quality.
+
+## Dependencies
 
 ## Example Usage
 
-Combinatorial optimization problems are represented as objects create by the class ```Problem```, for which problem-specific algorithms (such as an exact or pproximate algorithm for the weighted sum scalarization or an exact algorithm for the  epsilon constraint scalarization) can be implemented as methods.
+Combinatorial optimization problems are represented as objects create by the class `Problem`, for which problem-specific algorithms (such as an exact or approximate algorithm for the weighted sum scalarization or an exact algorithm for the epsilon constraint scalarization) can be implemented as methods.
 
-The following example initializes the symmetric metric traveling salesman problem with the double tree heuristic as an approximate algorithm for the weighted sum scalarization. Here, the attribute ```solution_quality_weighted_sum = 2``` specifies that the double tree heurstics always returns a 2-approximate Hamiltonian cycle for the single-objective symmetric metric traveling salesman problem induced by the weighted sum scalarization of the given weight vector ```weights```. The class ```Image```simply wrapps a numpy.ndarray to allow storing underlying solutions as attributes.
+The following example initializes the symmetric metric traveling salesman problem with the double tree heuristic as an approximate algorithm for the weighted sum scalarization. Here, the attribute `solution_quality_weighted_sum = 2` specifies that the double tree heurstics always returns a 2-approximate Hamiltonian cycle for the single-objective symmetric metric traveling salesman problem induced by the weighted sum scalarization of the given weight vector `weights`. The class `Image`simply wrapps a numpy.ndarray to allow storing underlying solutions as attributes.
 
 ```python
 from molib.core import Problem, Image
@@ -28,7 +29,7 @@ class TravelingSalesman_DoubleTree(Problem):
     def __init__(self, C: np.ndarray):
         '''
         C : ndarray of shape nr_cities x nr_cities x nr_obj specifying the distance matrices
-        '''        
+        '''
         super().__init__("min", C.shape[2])
 
         self.C = C
@@ -38,13 +39,13 @@ class TravelingSalesman_DoubleTree(Problem):
         self.solution_quality_weighted_sum = 2
 
     def weighted_sum(self, weights: np.ndarray):
- 
+
         A = np.matmul(self.C, weights)
- 
+
         # determine minimum spanning tree
         T = self.kruskal(A)
 
-        # represent minimum spanning tree via adjacency lists 
+        # represent minimum spanning tree via adjacency lists
         Adjazenzlisten = defaultdict(list)
         for [u,v] in T:
             Adjazenzlisten[u].append(v)
@@ -55,7 +56,7 @@ class TravelingSalesman_DoubleTree(Problem):
         image = np.zeros(self.C.shape[2])
 
         Q = deque(Adjazenzlisten[0])
-        Adjazenzlisten.pop(0)            
+        Adjazenzlisten.pop(0)
         while not len(Q) == 0:
             u = Q.pop()
             if u in Adjazenzlisten:
@@ -64,9 +65,9 @@ class TravelingSalesman_DoubleTree(Problem):
                 T.append(u)
 
                 Q.extend(Adjazenzlisten[u])
-                Adjazenzlisten.pop(u)                
-        
-        # get Hamiltonian cycle 
+                Adjazenzlisten.pop(u)
+
+        # get Hamiltonian cycle
         image = image + self.C[T[-1],0,:]
         T.append(0)
 
@@ -145,13 +146,22 @@ convex_approximation_set = apc.GridFPTAA(problem,eps)
 
 ```
 
-## References
-<a id="1">[1]</a> 
-Herzel, A., Ruzika, S. & Thielen, C. (2021) 
-Approximation Methods for Multiobjective Optimization Problems: A Survey. 
-INFORMS Journal on Computing, 33(4), 1284-1299.
+## Results
 
-<a id="2">[2]</a> 
-Helfrich, S., Herzel, A., Ruzika, S. & Thielen, C. (2021) 
-An Approximation Algorithm for a General Class of Multi-Parametric Optimization Problems. 
+## Replicating
+
+## References
+
+<a id="1">[1]</a>
+Helfrich, S., Ruzika, S. & Thielen, C. (2021)
+Efficiently Constructing Convex Approximation Sets in Multiobjective Optimization Problems.
+
+<a id="2">[2]</a>
+Helfrich, S., Herzel, A., Ruzika, S. & Thielen, C. (2021)
+An Approximation Algorithm for a General Class of Multi-Parametric Optimization Problems.
 Journal of Combinatorial Optimization (online first).
+
+<a id="3">[3]</a>
+Herzel, A., Ruzika, S. & Thielen, C. (2021)
+Approximation Methods for Multiobjective Optimization Problems: A Survey.
+INFORMS Journal on Computing, 33(4), 1284-1299.
