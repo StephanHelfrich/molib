@@ -117,7 +117,7 @@ class TravelingSalesman_DoubleTree(Problem):
             rank[xroot] += 1
 ```
 
-All implemented general approximation methods require an object of the class Problem with an implementation of the appropriate scalarization. For example, the general method to obtain convex approximation sets as prented in [[2]](#2) require an approximation algorithm for the weighted sum scalarization with bounded approxiamtion guarantee. The double tree heuristic is a 2-approximation algorithm. Hence, we can obtain, for any $\varepsilon > 0$, a $(1 + \varepsilon) \cdot 2)-convex approximation set for an instance of the symmetric metric traveling salesman problem as follows:
+All implemented general approximation methods require an object of the class Problem with an implementation of the appropriate scalarization. For example, the general method to obtain convex approximation sets as prented in [[2]](#2) require an approximation algorithm for the weighted sum scalarization with bounded approxiamtion guarantee. The double tree heuristic is a 2-approximation algorithm. Hence, we can obtain, for any $\varepsilon > 0$, a $(1 + \varepsilon) \cdot 2)$-convex approximation set for an instance of the symmetric metric traveling salesman problem as follows:
 
 ```python
 from molib.algorithms.approximations import approximate_convex_pareto_set as apc
@@ -148,7 +148,19 @@ convex_approximation_set = apc.GridFPTAA(problem,eps)
 
 ## Results
 
+Figure 1 shows, for each combination of convex approximation algorithms and $\varepsilon \in \{0.1, 0.25, 0.5 \}$ applied to uniform (orange) and conflicting (blue) triobjective knapsack instances, the the average running time of 10 runs, the $\varepsilon$-convex indicator of the returned set $S$, and the ratio of the cardinality of the set~$S$ to the cardinality of the solution set for the weighted sum scalarization obtained by the dual variant of Benson's Outer Approxiamtion Algorithm. Hereby, the results of the GRID method are indicated with solid lines, and the results of the OAA method with dashed lines.
+
+![test results on knapsack instances](results/knapsack.png)
+
+Figure 1 shows, for each combination of convex approximation algorithms and $\varepsilon \in \{0.1, 0.25, 0.5 \}$ applied to triobjective symmetric metric traveling salesman instances, the average running time of 10 runs, the $\varepsilon$-convex indicator of the returned set $S$, and the ratio of the cardinality of the set $S$ to the cardinality of the solution set for the weighted sum scalarization obtained by the dual variant of Benson's Outer Approxiamtion Algorithm. Again, the results of the GRID method are indicated with solid lines, and the results of the OAA method with dashed lines.
+
+![test results on traveling salesman instances](results/tsp.png)
+
+All experiments have been performed on a computer server equipped with two Intel(R) Xeon(R) CPUs E5-2670 (single processor specifications: nominal speed~2.9GHz, boost up to 3.8GHz, 8~cores, 16~threads, 20MB~Cache) and 192GB DDR-3 ECC RAM at 1333MHz using the operating system environment Ubuntu Linux~11. In each run, a time limit of 1~hour has been set.
+
 ## Replicating
+
+To replicate the results in Figure 1 and Figure 2, run 'run_tsp.py' and 'run_knapsack.py', respectively.
 
 ## References
 
