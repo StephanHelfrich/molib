@@ -113,7 +113,6 @@ venv.bak/
 
 # pictures
 *.jpg
-*.png
 
 # docs
 *.csv
