@@ -124,7 +124,7 @@ def dual_outer_approximation(problem:Problem) -> Set[Image]:
     elif problem.type == "max":
         # determine interior point: take y = f(x,w) + (UB - f(x,w))/2 and w = (1/K,...(1/K))
         interior_point = np.full((p-1), 1/(p))
-        interior_point = np.append(interior_point, np.matmul(np.append(interior_point, 1/(p)), y) + 100)
+        interior_point = np.append(interior_point, np.matmul(np.append(interior_point, 1/(p)), y) + 1)
         interior_point = np.array(interior_point)
 
     oa = HalfspaceIntersection(A, interior_point, incremental=True)

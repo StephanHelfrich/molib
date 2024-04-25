@@ -112,7 +112,7 @@ def DandY(problem: Problem, epsilon: float) -> Set[Image]:
         and the attribute 'solution_quality_weighted_sum' is set to the appropriate float value greater than or equal to one that is guaranteed by weighted_sum.
 
     epsilon : float
-        Indicates the additional loss on the guaranteed convex approximtion factor. Required to be greater than 1.
+        Indicates the additional loss on the guaranteed convex approximtion factor.
 
 
     Returns
@@ -130,12 +130,13 @@ def DandY(problem: Problem, epsilon: float) -> Set[Image]:
     .. [1] Diakonikolas, I. "Approximation of Multiobjective Optimization Problems ."
     PhD Thesis, Columbia University, 2011.
     """
+
     #get/compute import constants
     p = problem.nr_obj
     delta1 = problem.solution_quality_weighted_sum - 1
-
+    delta2 = epsilon
+    # delta2 = (1 + epsilon)/(1 + delta1) - 1
     
-    delta2 = (1 + epsilon)/(1 + delta1) - 1
     if delta2 < 0:
         raise ValueError("weighted sum of problem must guarantee approximation quality less or equal to 1 + epsilon")
 
@@ -246,7 +247,7 @@ def FPTOAA(problem: Problem, epsilon: float) -> Set[Image]:
         and the attribute 'solution_quality_weighted_sum' is set to the appropriate float value greater than or equal to one that is guaranteed by weighted_sum.
 
     epsilon : float
-        Indicates the additional loss on the guaranteed convex approximtion factor. Required to be greater than 1.
+        Indicates the additional loss on the guaranteed convex approximtion factor. 
 
 
     Returns
