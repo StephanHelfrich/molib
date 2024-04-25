@@ -105,6 +105,6 @@ def get_convex_approximation_set(configuration):
 
 if __name__ == "__main__":
     instances = os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'instances','Knapsack_small'))
-    print(instances)
-    # instance = "3-Confliciting-10-1-0.1.dat"
-    # main(instance)
+    
+    for instance in instances:
+        main(instance)
