@@ -158,6 +158,6 @@ def write_knapsack_instance(profits, weights, capacity, path:str):
         file.writelines( [str(profits.shape[1]),'\n',
                             str(profits.shape[0]),'\n',
                             str(capacity),'\n',
-                            np.array2string(profits.T, separator=',',suppress_small=True,precision = 'int',max_line_width = 40000000000000000000).strip(),'\n',
-                            np.array2string(weights.T, separator=',',suppress_small=True,precision = 'int',max_line_width = 40000000000000000000).strip(),
+                            np.array2string(profits.T, separator=',',suppress_small=True,precision = 0,max_line_width = 40000000000000000000).strip(),'\n',
+                            np.array2string(weights.T, separator=',',suppress_small=True,precision = 0,max_line_width = 40000000000000000000).strip(),
                             ])
