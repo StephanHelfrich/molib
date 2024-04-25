@@ -45,8 +45,7 @@ def main(instance_name : str):
     logging.info(f"Run instance " + instance["name"])
         
     subroutines = [Knapsack_Greedy_with_Specs]
-    # convex_algorithms = [(acPs.DandY,"DandY"),(acPs.GridFPTAA,"Grid"),(acPs.FPTOAA,"OAA")]
-    convex_algorithms = [(acPs.FPTOAA,"OAA")]
+    convex_algorithms = [(acPs.DandY,"DandY"),(acPs.GridFPTAA,"Grid"),(acPs.FPTOAA,"OAA")]
     epsilons = [0.5,0.25,0.1]    
     nr_runs = 10
 
