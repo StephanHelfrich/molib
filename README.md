@@ -1,12 +1,21 @@
 # Molib: General Exact and Approximation Methods for Multiobjective Combinatorial Optimization Problems in Python
 
-The software and data in this repository is used in the research reported on in the paper [[1]](#1).
+<!--- The software and data in this repository is used in the research reported on in the paper [[1]](#1).
 
 ## Cite
 
 To cite the contents of this repository, please cite the paper
 
-[[1]](#1)
+[[1]](#1) --->
+
+This repository offers a framework for the approximation of multiobjective combinatorial optimization problems based on numpy. 
+It covers a variety of algorithms that
+- are applicable under mild assumptions,
+- return solution sets that constitute multiobjective (convex) approxiamtion sets with provable worst-case approximation guarantee,
+- have provable asymptotic worst-case running-times.
+
+
+For a proper introduction into and a recent survey of approximation of multiobjective optimization, we refer to [[1]](#1).
 
 ## Description
 
@@ -165,15 +174,16 @@ To replicate the results in Figure 1 and Figure 2, run `run_tsp.py` and `run_kna
 ## References
 
 <a id="1">[1]</a>
+Herzel, A., Ruzika, S. & Thielen, C. (2021)
+Approximation Methods for Multiobjective Optimization Problems: A Survey.
+INFORMS Journal on Computing, 33(4), 1284-1299.
+<!--
+<a id="1">[1]</a>
 Helfrich, S., Ruzika, S. & Thielen, C. (2021)
 Efficiently Constructing Convex Approximation Sets in Multiobjective Optimization Problems.
-
+--->
 <a id="2">[2]</a>
 Helfrich, S., Herzel, A., Ruzika, S. & Thielen, C. (2021)
 An Approximation Algorithm for a General Class of Multi-Parametric Optimization Problems.
 Journal of Combinatorial Optimization (online first).
 
-<a id="3">[3]</a>
-Herzel, A., Ruzika, S. & Thielen, C. (2021)
-Approximation Methods for Multiobjective Optimization Problems: A Survey.
-INFORMS Journal on Computing, 33(4), 1284-1299.
