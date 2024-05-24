@@ -8,10 +8,10 @@ To cite the contents of this repository, please cite the paper
 
 [[1]](#1) --->
 
-This repository offers a framework for the approximation of multiobjective combinatorial optimization problems based on numpy. 
+This repository offers a framework for the approximation of multiobjective combinatorial optimization problems. 
 It covers a variety of algorithms that
 - are applicable under mild assumptions,
-- return solution sets that constitute multiobjective (convex) approxiamtion sets with provable worst-case approximation guarantee,
+- return solution sets that constitute multiobjective convex approximation sets with provable worst-case approximation guarantee,
 - have provable asymptotic worst-case running-times.
 
 
