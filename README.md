@@ -24,6 +24,8 @@ In this article, we propose a polynomial-time algorithm to compute convex approx
 
 ## Dependencies
 
+Dependencies can be found in requirements.txt
+
 ## Example Usage
 
 Combinatorial optimization problems are represented as objects create by the class `Problem`, for which problem-specific algorithms (such as an exact or approximate algorithm for the weighted sum scalarization or an exact algorithm for the epsilon constraint scalarization) can be implemented as methods.
