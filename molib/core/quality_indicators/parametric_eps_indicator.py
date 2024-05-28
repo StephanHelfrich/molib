@@ -17,7 +17,7 @@ from itertools import product
 import numpy as np
 
 
-def get_epsilon_indicator(images: Set[Image], Y_ESN: Set[Image], type: str, method = "grid", n: int = 100) -> float:
+def get_epsilon_convex_indicator(images: Set[Image], Y_ESN: Set[Image], type: str, method = "grid", n: int = 100) -> float:
     '''Get Convex Epsilon Indicator
 
     Determine the epsilon indicator of a sets of images to a reference set that contains all extreme supported nondominated images.
