@@ -40,7 +40,7 @@ def main(instance_name : str):
         "profits": profits.tolist(),
         "weights": weights.tolist(),
         "capacity": capacity,
-        "Y_ESN" : np.loadtxt(os.path.join(dir_path,'outputs_references','Knapsack','ESN-' + instance_name[:-4] + '.txt'),ndim=2).tolist(),
+        "Y_ESN" : np.loadtxt(os.path.join(dir_path,'outputs_references','Knapsack','ESN-' + instance_name[:-4] + '.txt'),ndmin=2).tolist(),
     }
     logging.info(f"Run instance " + instance["name"])
         

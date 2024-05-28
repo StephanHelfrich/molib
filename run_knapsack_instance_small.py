@@ -1,10 +1,10 @@
 from molib.problems import knapsack as kp
 from molib.algorithms.approximations import approximate_convex_pareto_set as acPs
 from molib.core import Image
+from molib.core.quality_indicators import get_epsilon_convex_indicator
 
 import json
 import os
-import sympy
 import logging
 import numpy as np
 import datetime
@@ -40,7 +40,7 @@ def main(instance_name : str):
         "profits": profits.tolist(),
         "weights": weights.tolist(),
         "capacity": capacity,
-        "E_ESN" : np.loadtxt(os.path.join(dir_path,'outputs_references','Knapsack_small','ESN-' + instance_name[:-4] + '.txt')).tolist(),
+        "Y_ESN" : np.loadtxt(os.path.join(dir_path,'outputs_references','Knapsack_small','ESN-' + instance_name[:-4] + '.txt'),ndmin=2).tolist(),
     }
     logging.info(f"Run instance " + instance["name"])
         
@@ -61,8 +61,7 @@ def main(instance_name : str):
     with Pool() as pool:
         instance["results"] = pool.map(get_convex_approximation_set, configurations)
     pool.join()
-
-    import json
+    
     with open(os.path.join(dir_path,'results','Knapsack_small',instance["name"] + '.json'), "w") as f:
         json.dump(instance,f, indent=4)
 
@@ -75,7 +74,8 @@ def get_convex_approximation_set(configuration):
     result = {
         "alpha" : problem.solution_quality_weighted_sum,
         "epsilon" : eps,
-        "subroutine": alg[1],
+        "convex approximation algorithm": alg[1],
+        "subroutine": problem.name,
         "run" : run
         }
     
@@ -92,14 +92,15 @@ def get_convex_approximation_set(configuration):
 
         #get specs
         result["running time (s)"] = (end-start).total_seconds()
-        result["images"] = np.asarray(list(images)).tolist()
+        result["images"] = np.asarray(list(images),).tolist()
+        result["epsilon_convex_indicator"] = get_epsilon_convex_indicator(images=np.asarray(list(images)).tolist(),Y_ESN=instance["Y_ESN"],type="max",method="gurobi")
 
     except func_timeout.FunctionTimedOut:
         logging.info(f"...did not finish within {1}h")
         result["running time (s)"] = None
         result["images"] = None
+        result["epsilon_convex_indicator"] = None
     return result
-
 
 
 if __name__ == "__main__":
