@@ -36,3 +36,32 @@ class Problem:
             Image with solution such that the weighted sum objective is not worse that self.solution_qualitiy_weighted_sum times the optimal objective.
         '''
         pass
+
+    def weighted_tchebycheff(self, weights, reference_point, augmentation: float = 0.0) -> Image:
+        r'''(Augmented) weighted Tchebycheff scalarization.
+
+        For a minimization problem, return an image of an optimal solution of
+
+            min_x  max_i w_i (f_i(x) - r_i)  +  augmentation * sum_i w_i (f_i(x) - r_i),
+
+        where r is the reference point. For a maximization problem, f_i(x) - r_i is replaced by
+        r_i - f_i(x). With augmentation > 0, every optimal solution is properly efficient.
+        With augmentation = 0, the returned image is expected to be nondominated (e.g., by
+        lexicographic tie-breaking).
+
+        Returns
+        -------
+        Image or None
+            Image (with solution) of an optimal solution, or None if no solution was found.
+        '''
+        raise NotImplementedError("weighted_tchebycheff is not implemented for this problem")
+
+    def get_bounds(self):
+        """Return (LB, UB) as vectors of length nr_obj, or raise if they are not set."""
+        LB = getattr(self, "LB", None)
+        UB = getattr(self, "UB", None)
+        if LB is None or UB is None:
+            raise AttributeError("The problem does not provide the attributes LB and UB")
+        LB = np.broadcast_to(np.asarray(LB, dtype=float), (self.nr_obj,)).copy()
+        UB = np.broadcast_to(np.asarray(UB, dtype=float), (self.nr_obj,)).copy()
+        return LB, UB
