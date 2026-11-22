@@ -3,7 +3,34 @@ from molib.core.problem import Problem, Image
 import numpy as np
 
 
-class ImageSet(Problem):
+def _lexargmin(x: np.ndarray) -> int:
+    """Index of the lexicographically smallest row of x."""
+    idx = np.arange(x.shape[0])
+    for k in range(x.shape[1]):
+        col = x[idx, k]
+        idx = idx[col == col.min()]
+        if len(idx) < 2:
+            break
+    return int(idx[0])
+
+
+class _TchebycheffByEnumeration:
+    """Exact (augmented) weighted Tchebycheff scalarization by enumeration of the rows of self.Y.
+
+    Ties are broken lexicographically, so the returned image is nondominated also for augmentation = 0.
+    """
+
+    def weighted_tchebycheff(self, weights, reference_point, augmentation: float = 0.0) -> Image:
+        w = np.asarray(weights, dtype=float)
+        r = np.asarray(reference_point, dtype=float)
+        Y = np.asarray(self.Y, dtype=float)
+        D = Y - r if self.type == "min" else r - Y
+        values = np.max(w * D, axis=1) + augmentation * (D @ w)
+        oriented = Y if self.type == "min" else -Y
+        i = _lexargmin(np.c_[values, oriented])
+        return Image(self.Y[i], solution=i)
+    
+class ImageSet(_TchebycheffByEnumeration, Problem):
     """
         Problem instance is given by an explicit list of points in the image space,
         weighted sum return an (arbitrary) image that approximates the image minimizing or maximizing the weighted sum.
@@ -35,7 +62,7 @@ class ImageSet(Problem):
         image = Image(self.Y[i], solution = i)
         return image
 
-class ImageSet_withLexWS(Problem):
+class ImageSet_withLexWS(_TchebycheffByEnumeration, Problem):
     """
         Problem instance is given by an explicit list of points in the image space,
         weighted sum return an image minimizing or maximizing a lexicographic version of the weighted sum scalarization. Hence, only extreme supported nondominated images are returned.
@@ -87,3 +114,5 @@ class ImageSet_withLexWS(Problem):
             if len(idx) < 2:
                 break
         return idx[0]  
+
+    
