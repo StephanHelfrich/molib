@@ -4,11 +4,6 @@ import itertools
 import networkx as nx
 from collections import deque,defaultdict
 
-try:
-    import gurobipy as gp
-except:
-    print('gurobi not found')
-
 class TravelingSalesman(Problem):
     def __init__(self, C: np.ndarray):
         '''
@@ -24,95 +19,95 @@ class TravelingSalesman(Problem):
         raise NotImplementedError()
     
 
-class TravelingSalesman_Gurobi(TravelingSalesman):
-    def __init__(self, C: np.ndarray):
+# class TravelingSalesman_Gurobi(TravelingSalesman):
+#     def __init__(self, C: np.ndarray):
         
-        # code adapted from
-        # https://colab.research.google.com/github/Gurobi/modeling-examples/blob/master/traveling_salesman/tsp_gcl.ipynb
+#         # code adapted from
+#         # https://colab.research.google.com/github/Gurobi/modeling-examples/blob/master/traveling_salesman/tsp_gcl.ipynb
         
-        super().__init__(C)
-        self.solution_quality_weighted_sum = 1
+#         super().__init__(C)
+#         self.solution_quality_weighted_sum = 1
 
 
-        self.nr_cities = self.C.shape[0]
-        self.dist = { (c1,c2) : C[c1,c2,:] for c1, c2 in itertools.combinations(range(self.nr_cities),2) }
+#         self.nr_cities = self.C.shape[0]
+#         self.dist = { (c1,c2) : C[c1,c2,:] for c1, c2 in itertools.combinations(range(self.nr_cities),2) }
 
 
-        self.model = gp.Model('TSP')
-        self.model.Params.LogToConsole = 0
-        self.model.Params.OutputFlag = 0
-        self.model.Params.lazyConstraints = 1
+#         self.model = gp.Model('TSP')
+#         self.model.Params.LogToConsole = 0
+#         self.model.Params.OutputFlag = 0
+#         self.model.Params.lazyConstraints = 1
         
 
-        ### variables
-        # add variable for each pair of city
-        self.vars = self.model.addVars(self.dist.keys(), vtype=gp.GRB.BINARY, name = "x")
+#         ### variables
+#         # add variable for each pair of city
+#         self.vars = self.model.addVars(self.dist.keys(), vtype=gp.GRB.BINARY, name = "x")
 
-        # Symmetric direction: Copy the object
-        for i, j in self.vars.keys():
-            self.vars[j, i] = self.vars[i, j]  # edge in opposite direction
+#         # Symmetric direction: Copy the object
+#         for i, j in self.vars.keys():
+#             self.vars[j, i] = self.vars[i, j]  # edge in opposite direction
         
         
-        # Constraints: two edges incident to each city
-        self.cons = self.model.addConstrs(self.vars.sum(c, '*') == 2 for c in range(self.nr_cities))
+#         # Constraints: two edges incident to each city
+#         self.cons = self.model.addConstrs(self.vars.sum(c, '*') == 2 for c in range(self.nr_cities))
 
-        # dummy objecitve
-        self.model.setObjective(gp.quicksum(self.vars[i,j] * self.dist[i,j][0]  for i,j in itertools.combinations(range(self.nr_cities),2)) , gp.GRB.MINIMIZE)
+#         # dummy objecitve
+#         self.model.setObjective(gp.quicksum(self.vars[i,j] * self.dist[i,j][0]  for i,j in itertools.combinations(range(self.nr_cities),2)) , gp.GRB.MINIMIZE)
 
-    def weighted_sum(self, weights: np.ndarray):        
-        self.model.setObjective(gp.quicksum( self.vars[i,j] * np.matmul(self.dist[i,j],weights)  for i,j in itertools.combinations(range(self.nr_cities),2)) , gp.GRB.MINIMIZE)
-        self.model.update()
-        self.model.reset()
+#     def weighted_sum(self, weights: np.ndarray):        
+#         self.model.setObjective(gp.quicksum( self.vars[i,j] * np.matmul(self.dist[i,j],weights)  for i,j in itertools.combinations(range(self.nr_cities),2)) , gp.GRB.MINIMIZE)
+#         self.model.update()
+#         self.model.reset()
 
-        def subtourelim(model, where):
-            if where == gp.GRB.Callback.MIPSOL:
-                # make a list of edges selected in the solution
-                vals = model.cbGetSolution(model._vars)
-                selected = gp.tuplelist((i, j) for i, j in model._vars.keys() if vals[i, j] > 0.5)
-                # find the shortest cycle in the selected edge list
-                tour = subtour(selected)
-                if len(tour) < self.nr_cities:
-                    # add subtour elimination constr. for every pair of cities in subtour
-                    model.cbLazy(gp.quicksum(model._vars[i, j] for i, j in itertools.combinations(tour, 2))
-                                <= len(tour)-1)
+#         def subtourelim(model, where):
+#             if where == gp.GRB.Callback.MIPSOL:
+#                 # make a list of edges selected in the solution
+#                 vals = model.cbGetSolution(model._vars)
+#                 selected = gp.tuplelist((i, j) for i, j in model._vars.keys() if vals[i, j] > 0.5)
+#                 # find the shortest cycle in the selected edge list
+#                 tour = subtour(selected)
+#                 if len(tour) < self.nr_cities:
+#                     # add subtour elimination constr. for every pair of cities in subtour
+#                     model.cbLazy(gp.quicksum(model._vars[i, j] for i, j in itertools.combinations(tour, 2))
+#                                 <= len(tour)-1)
 
-        def subtour(edges):
-            unvisited = list(range(self.nr_cities))
-            cycle = list(range(self.nr_cities)) # Dummy - guaranteed to be replaced
-            while unvisited:  # true if list is non-empty
-                thiscycle = []
-                neighbors = unvisited
-                while neighbors:
-                    current = neighbors[0]
-                    thiscycle.append(current)
-                    unvisited.remove(current)
-                    neighbors = [j for i, j in edges.select(current, '*')
-                                if j in unvisited]
-                if len(thiscycle) <= len(cycle):
-                    cycle = thiscycle # New shortest subtour
-            return cycle
+#         def subtour(edges):
+#             unvisited = list(range(self.nr_cities))
+#             cycle = list(range(self.nr_cities)) # Dummy - guaranteed to be replaced
+#             while unvisited:  # true if list is non-empty
+#                 thiscycle = []
+#                 neighbors = unvisited
+#                 while neighbors:
+#                     current = neighbors[0]
+#                     thiscycle.append(current)
+#                     unvisited.remove(current)
+#                     neighbors = [j for i, j in edges.select(current, '*')
+#                                 if j in unvisited]
+#                 if len(thiscycle) <= len(cycle):
+#                     cycle = thiscycle # New shortest subtour
+#             return cycle
 
-        self.model._vars = self.vars
+#         self.model._vars = self.vars
 
-        self.model.optimize(subtourelim)
+#         self.model.optimize(subtourelim)
 
 
-        #retrieve solution
-        vals = self.model.getAttr('x', self.vars)
-        selected = gp.tuplelist((i, j) for i, j in vals.keys() if vals[i, j] > 0.5)
-        tour = subtour(selected)
+#         #retrieve solution
+#         vals = self.model.getAttr('x', self.vars)
+#         selected = gp.tuplelist((i, j) for i, j in vals.keys() if vals[i, j] > 0.5)
+#         tour = subtour(selected)
         
-        assert len(tour) == self.nr_cities
+#         assert len(tour) == self.nr_cities
 
-        tour.append(tour[0])
+#         tour.append(tour[0])
 
-        image = [0 for _ in range(self.nr_obj)]
-        for i in range(len(tour) -1) :
-            for dim in range(self.nr_obj):
-                image[dim] += self.C[tour[i],tour[i+1],dim]
+#         image = [0 for _ in range(self.nr_obj)]
+#         for i in range(len(tour) -1) :
+#             for dim in range(self.nr_obj):
+#                 image[dim] += self.C[tour[i],tour[i+1],dim]
   
-        image = Image(image, solution = tour)
-        return image
+#         image = Image(image, solution = tour)
+#         return image
 
 
 

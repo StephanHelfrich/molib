@@ -3,10 +3,6 @@ from molib.core.problem import Problem, Image
 import numpy as np
 import math
 import ast
-try:
-    import gurobipy as gp
-except:
-    print('gurobi not found')
 
 
 class Knapsack(Problem):
@@ -28,48 +24,63 @@ class Knapsack(Problem):
         raise NotImplementedError()
     
 class Knapsack_Exact(Knapsack):
+    """Exact weighted sum algorithm by dynamic programming over the capacity.
+
+    Among all optimal solutions of the weighted sum scalarization, a solution whose image is
+    lexicographically maximal is returned, so the image is nondominated also for weights with a
+    zero entry. Requires integer item weights and capacity. Running time O(n * capacity * nr_obj).
+    """
+
     def __init__(self, profits: np.ndarray, weights: np.ndarray, capacity: int):
         super().__init__(profits, weights, capacity)
         self.solution_quality_weighted_sum = 1
 
-        self.model = gp.Model('knapsack')
-        self.model.Params.OutputFlag = 0
-        self.model.Params.LogToConsole = 0
-
-
-        self.x = self.model.addVars(len(self.items), vtype=gp.GRB.BINARY, name = "x")
-
-        self.model.addConstr( gp.quicksum(self.x[item[0]] * item[1] for item in self.items  ) <= self.capacity)
-
-        self.model.setObjective(gp.quicksum(self.x[item[0]] * item[2][0] for item in self.items  ) , gp.GRB.MAXIMIZE )
-    
-        self.model.update()
+        self._weights = np.asarray(weights)
+        if not np.all(np.equal(np.mod(self._weights, 1), 0)) or int(capacity) != capacity:
+            raise ValueError("Knapsack_Exact requires integer item weights and capacity")
+        self._weights = self._weights.astype(int)
+        self._profits = np.asarray(profits, dtype=float)
 
     def weighted_sum(self, weights: list) -> Image:
+        weights = np.asarray(weights, dtype=float)
+        n, C = len(self.items), int(self.capacity)
+        values = self._profits @ weights
 
-        self.model.setObjective(gp.quicksum(self.x[item[0]] * sum(item[2][dim] * weights[dim] for dim in range(self.nr_obj)) for item in self.items  ) , gp.GRB.MAXIMIZE )
-    
-        self.model.update()
+        # best[k, c]: lexicographically maximal (weighted value, f_1, ..., f_p) with capacity c,
+        # k = 0 is the weighted value and k = 1, ..., p are the objectives
+        keys = np.vstack([values[:, None].T, self._profits.T])          # (p + 1, n)
+        best = np.zeros((keys.shape[0], C + 1))
+        take = np.zeros((n, C + 1), dtype=bool)
+        tol = 1e-9 * max(1.0, float(np.abs(values).sum()))
 
-        self.model.optimize()
+        for i in range(n):
+            w = self._weights[i]
+            if w > C:
+                continue
+            candidate = best[:, :C + 1 - w] + keys[:, i:i + 1]             # states c = w, ..., C
+            current = best[:, w:]
+            better = self._lex_greater(candidate, current, tol)
+            take[i, w:] = better
+            current[:, better] = candidate[:, better]
 
+        # reconstruct the solution
+        solution, c = [], C
+        for i in range(n - 1, -1, -1):
+            if take[i, c]:
+                solution.append(i)
+                c -= self._weights[i]
+        image = self._profits[solution].sum(axis=0) if solution else np.zeros(self.nr_obj)
+        return Image(image, solution=sorted(solution))
 
-        # get solution
-        sol = []
-        image = [0 for _ in range(self.nr_obj)]
-        
-
-        if self.model.status == gp.GRB.OPTIMAL:
-            x = self.model.getVars()
-            for item in self.items:
-                if x[item[0]].X >= 0.5:
-                    sol.append(item[0])
-                    for dim in range(self.nr_obj):
-                        image[dim] += item[2][dim]
-            image = Image(np.array(image),solution=sorted(sol))
-            return image
-        else:
-            print('gurobi has solved knapsack problem not to optimality.')
+    @staticmethod
+    def _lex_greater(a: np.ndarray, b: np.ndarray, tol: float) -> np.ndarray:
+        """Columnwise lexicographic comparison a > b (first row with tolerance)."""
+        greater = a[0] > b[0] + tol
+        undecided = np.abs(a[0] - b[0]) <= tol
+        for k in range(1, a.shape[0]):
+            greater |= undecided & (a[k] > b[k])
+            undecided &= a[k] == b[k]
+        return greater
 
 
 

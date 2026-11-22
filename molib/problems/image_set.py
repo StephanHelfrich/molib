@@ -24,7 +24,14 @@ class _EnumerationSolvers:
     """
 
     def weighted_tchebycheff(self, weights, reference_point, augmentation: float = 0.0) -> Image:
-        ...                                     # unverändert
+        w = np.asarray(weights, dtype=float)
+        r = np.asarray(reference_point, dtype=float)
+        Y = np.asarray(self.Y, dtype=float)
+        D = Y - r if self.type == "min" else r - Y
+        values = np.max(w * D, axis=1) + augmentation * (D @ w)
+        oriented = Y if self.type == "min" else -Y
+        i = _lexargmin(np.c_[values, oriented])
+        return Image(self.Y[i], solution=i)                             # unverändert
 
     @implements(WeightedTchebycheff)
     def _solve_weighted_tchebycheff(self, s: WeightedTchebycheff) -> Image:

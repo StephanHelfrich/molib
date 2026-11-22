@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=========================================================================
+==========================================================================================
 General Exact Methods to obtain all optimal image sets for the weighted sum scalarization.
-=========================================================================
+==========================================================================================
 
 Implementation of Outer Approximation Algorithms to compute optimal image sets for the weighted sum scalarization. More precisely,
 Given a multiobjective optimization problem, these methods seek to find a set of images that contain, for each possible weight vecotrs 
@@ -32,7 +32,7 @@ from molib.core.image import Image
 from molib.core.problem import Problem
 from molib.core.solve import solve
 from molib.scalarizations import WeightedSum
-
+from molib.core.linear_programming import max_last_coordinate_in_hull
 
 
 from molib.core.kdTree import make_kd_tree,get_nearest,add_point
@@ -225,11 +225,6 @@ def dual_outer_approximation_double_description(problem:Problem) -> Set[Image]:
     ----------
     .. [1] F. Bokler and P. Mutzel. "Output-sensitive algorithms for enumerating the extreme nondominated points of multiobjective combinatorial optimization problems." In: Algorithms - ESA 2015, pp 288-299, 2015.
     """
-    try: 
-        import gurobipy as gp
-    except:
-        print('gurobi not found')
-        return
     
     def tcheb(a, b):
             value = max([abs(a[i] - b[i]) for i in range(len(a))])
@@ -247,42 +242,9 @@ def dual_outer_approximation_double_description(problem:Problem) -> Set[Image]:
     def distanzConvexHull(points, point):
         # points: np.array of dimension (nr_point, nr_criteria)
         # point: np.array of dimension [nr_criteria,]
-        # output distance point, conv(points)
-
-        # print('Calculate distance to inner approximation polytope..........')
-        # Create Model
-        model = gp.Model('convex hull')
-        model.Params.LogToConsole = 0
-        # create variable per point in points
-        x = model.addVars(points.shape[0], lb = 0, ub = 1, name = 'x')
-        # create obj variable
-        y = model.addVar(lb = 0, name = 'y')
-
-        # add summ constraint
-        model.addConstr( gp.quicksum( x[i] for i in range(len(x))  ) == 1 )
-
-        # add pont constraints
-        for j in range(points.shape[1] - 1):
-            model.addConstr( gp.quicksum( points[i,j] * x[i] for i in range(len(x)) )  == point[j] )
-        model.addConstr( gp.quicksum(points[i,-1] * x[i] for i in range(len(x)) ) == y )
-
-        # set objective
-        model.setObjective(y, gp.GRB.MAXIMIZE  )
-        model.optimize()
-
-        # print(f"optimal value = {model.objVal:.2f}")
-        # for v in model.getVars():
-        #     print(f"optimal {v.varName} = {v.x:.2f}")
-    
-        if model.status == gp.GRB.OPTIMAL:
-            # print('Distance sucessfully caluclated ' )
-            return model.objVal
-        if model.status == gp.GRB.INF_OR_UNBD:
-            # print('Unbbounded Solution in Convex Hull Distance Calculation')
-            sys.exit()
-        elif model.status != gp.GRB.INFEASIBLE:
-            # print('Optimization was stopped with status %d' % model.status)
-            sys.exit(0) 
+        # output: maximum of the last coordinate over conv(points) with the remaining coordinates
+        # fixed to point[:-1], or None if there is no such point (linear program, scipy/HiGHS)
+        return max_last_coordinate_in_hull(points, np.asarray(point, dtype=float)[:points.shape[1] - 1])
 
     # compute important constants
 
