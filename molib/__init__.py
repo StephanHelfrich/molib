@@ -11,6 +11,7 @@ structure, dynamics, and functions of multiobjective optimization problems.
 # import orderwise
 from molib import core
 from molib.core import *
-
+from molib import scalarizations
+from molib.scalarizations import *
 from molib import algorithms
 from molib.algorithms import *

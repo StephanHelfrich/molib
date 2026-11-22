@@ -16,6 +16,8 @@ import numpy as np
 
 from molib.core.image import Image
 from molib.core.problem import Problem
+from molib.core.solve import solve
+from molib.scalarizations import WeightedSum
 
 TOL = 1e-6
 
@@ -34,8 +36,8 @@ def dichotomic_search(problem: Problem, tol: float = TOL) -> Set[Image]:
     Parameters
     ----------
     problem : Problem
-        Biobjective problem for which an exact weighted sum algorithm is implemented, i.e.,
-        ``solution_quality_weighted_sum == 1``. The weighted sum algorithm is assumed to return
+        Biobjective problem with an exact solver for ``WeightedSum`` (see ``molib.core.solve``).
+        The solver is assumed to return
         nondominated images also for weights with a zero entry (e.g., by lexicographic
         tie-breaking); otherwise, the two endpoints may be weakly nondominated only.
     tol : float
@@ -56,8 +58,8 @@ def dichotomic_search(problem: Problem, tol: float = TOL) -> Set[Image]:
         b = np.asarray(b, dtype=float)
         return bool(np.all(np.abs(a - b) <= tol * np.maximum(1.0, np.abs(a))))
 
-    y_l = problem.weighted_sum([1.0, 0.0])
-    y_r = problem.weighted_sum([0.0, 1.0])
+    y_l = solve(problem, WeightedSum([1.0, 0.0])).image
+    y_r = solve(problem, WeightedSum([0.0, 1.0])).image
 
     images: Set[Image] = {y_l}
     if close(y_l, y_r):
@@ -76,7 +78,7 @@ def dichotomic_search(problem: Problem, tol: float = TOL) -> Set[Image]:
             continue
         w = w / w.sum()
 
-        y = problem.weighted_sum(w.tolist())
+        y = solve(problem, WeightedSum(w)).image
         if close(y, a) or close(y, b):
             continue
 

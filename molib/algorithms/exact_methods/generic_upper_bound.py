@@ -25,6 +25,8 @@ from molib.core.dominance import leqq, nondominated, strict_leq
 from molib.core.image import Image
 from molib.core.local_upper_bound import LocalUpperBoundSet
 from molib.core.problem import Problem
+from molib.core.solve import solve
+from molib.scalarizations import WeightedTchebycheff
 
 __all__ = ["generic_upper_bound"]
 
@@ -69,9 +71,8 @@ def generic_upper_bound(
     Parameters
     ----------
     problem : Problem
-        Problem that implements ``weighted_tchebycheff(weights, reference_point, augmentation)``
-        with the convention of ``Problem.weighted_tchebycheff`` (for maximization: r_i - f_i with a
-        reference point r above all images).
+        Problem with a solver for ``WeightedTchebycheff`` (see ``molib.core.solve``). For
+        maximization, the scalarization uses r_i - f_i with a reference point r above all images.
     LB, UB : float or sequence of float, optional
         Componentwise lower and upper bounds on all nondominated images. Default: problem.LB and
         problem.UB. For minimization, UB has to be an upper bound on the nadir point (for
@@ -162,7 +163,7 @@ def generic_upper_bound(
         weights = 1.0 / (np.asarray(u, dtype=float) - reference_point)
         weights = weights / weights.sum()
 
-        y = problem.weighted_tchebycheff(weights.tolist(), (sign * reference_point).tolist(), augmentation)
+        y = solve(problem, WeightedTchebycheff(weights, sign * reference_point, augmentation)).image
         if y is not None:
             y = y if isinstance(y, Image) else Image(y)
             z = to_min(y)

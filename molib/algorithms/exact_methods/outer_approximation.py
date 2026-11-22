@@ -30,6 +30,8 @@ from typing import List,Set,Tuple
 
 from molib.core.image import Image
 from molib.core.problem import Problem
+from molib.core.solve import solve
+from molib.scalarizations import WeightedSum
 
 
 
@@ -87,7 +89,7 @@ def dual_outer_approximation(problem:Problem) -> Set[Image]:
 
     supported_images = set()
 
-    y = problem.weighted_sum([1 for _ in range(p)])
+    y = solve(problem, WeightedSum([1 for _ in range(p)])).image
     supported_images.add(y)
 
     ''' initialize outer approximation with initial solution'''
@@ -170,7 +172,7 @@ def dual_outer_approximation(problem:Problem) -> Set[Image]:
         last_entry = 1 - sum(i for i in next_vertex[:-1])
         if last_entry < TOL:
             last_entry = 0
-        obj_values = problem.weighted_sum( next_vertex[:-1] + [last_entry] )
+        obj_values = solve(problem, WeightedSum(next_vertex[:-1] + [last_entry])).image
         supported_images.add(obj_values)
         add_point(L,next_vertex[:-1],p-1)
         # L.append(next_vertex[:-1])
@@ -288,7 +290,7 @@ def dual_outer_approximation_double_description(problem:Problem) -> Set[Image]:
 
     supported_images = set()
 
-    y = problem.weighted_sum([1 for _ in range(p)])
+    y = solve(problem, WeightedSum([1 for _ in range(p)])).image
     supported_images.add(y)
 
     ''' initialize outer approximation with initial solution'''
@@ -388,7 +390,7 @@ def dual_outer_approximation_double_description(problem:Problem) -> Set[Image]:
         last_entry = 1 - sum(i for i in next_vertex[:-1])
         if last_entry < TOL:
             last_entry = 0
-        obj_values = problem.weighted_sum( next_vertex[:-1] + [last_entry] )
+        obj_values = solve(problem, WeightedSum(next_vertex[:-1] + [last_entry])).image
 
         L.append(next_vertex[:-1])
 
