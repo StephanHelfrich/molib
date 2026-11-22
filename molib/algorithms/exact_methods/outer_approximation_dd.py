@@ -9,7 +9,7 @@ import sys
 import numpy as np
 from numpy.core.fromnumeric import product
 from scipy.spatial import HalfspaceIntersection, ConvexHull
-import gurobipy as gp
+from molib.core.linear_programming import max_last_coordinate_in_hull
 import datetime
 
 from molib.core.problem import Problem
@@ -252,42 +252,9 @@ class OuterApproximation_DoubleDescription:
     def distanzConvexHull(self,points, point):
         # points: np.array of dimension (nr_point, nr_criteria)
         # point: np.array of dimension [nr_criteria,]
-        # output distance point, conv(points)
-
-        # print('Calculate distance to inner approximation polytope..........')
-        # Create Model
-        model = gp.Model('convex hull')
-        model.Params.LogToConsole = 0
-        # create variable per point in points
-        x = model.addVars(points.shape[0], lb = 0, ub = 1, name = 'x')
-        # create obj variable
-        y = model.addVar(lb = 0, name = 'y')
-
-        # add summ constraint
-        model.addConstr( gp.quicksum( x[i] for i in range(len(x))  ) == 1 )
-
-        # add pont constraints
-        for j in range(points.shape[1] - 1):
-            model.addConstr( gp.quicksum( points[i,j] * x[i] for i in range(len(x)) )  == point[j] )
-        model.addConstr( gp.quicksum(points[i,-1] * x[i] for i in range(len(x)) ) == y )
-
-        # set objective
-        model.setObjective(y, gp.GRB.MAXIMIZE  )
-        model.optimize()
-
-        # print(f"optimal value = {model.objVal:.2f}")
-        # for v in model.getVars():
-        #     print(f"optimal {v.varName} = {v.x:.2f}")
-    
-        if model.status == gp.GRB.OPTIMAL:
-            # print('Distance sucessfully caluclated ' )
-            return model.objVal
-        if model.status == gp.GRB.INF_OR_UNBD:
-            # print('Unbbounded Solution in Convex Hull Distance Calculation')
-            sys.exit()
-        elif model.status != gp.GRB.INFEASIBLE:
-            # print('Optimization was stopped with status %d' % model.status)
-            sys.exit(0) 
+        # output: maximum of the last coordinate over conv(points) with the remaining coordinates
+        # fixed to point[:-1], or None if there is no such point (linear program, scipy/HiGHS)
+        return max_last_coordinate_in_hull(points, np.asarray(point, dtype=float)[:points.shape[1] - 1])
     
     def lexsort(self,data): 
         # delete multiple rows                
