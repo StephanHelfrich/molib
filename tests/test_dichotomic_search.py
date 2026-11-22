@@ -4,7 +4,7 @@ import pytest
 from molib.algorithms.exact_methods import dichotomic_search
 from molib.problems.image_set import ImageSet_withLexWS
 
-from conftest import as_tuples, nondominated_set, random_images
+from helpers import as_tuples, nondominated_set, random_images
 
 
 def lower_left_convex_hull(N):
