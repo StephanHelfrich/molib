@@ -59,7 +59,7 @@ def approximate_dichotomy(problem: Problem, epsilon : float) -> Set[Image]:
     References
     ----------
     .. [1] Bazgan, C.; Herzel, A.; Ruzika, S.; Thielen, C. & Vanderpooten, D. "An Approximation Algorithm for a General Class of Parametric Optimization Problems."
-    Journal of Combinatorial Optimization 43, 2022, pp. 1328-1358.
+       Journal of Combinatorial Optimization 43, 2022, pp. 1328-1358.
     """
 
     assert problem.nr_obj == 2, f"number of objectives of the problem is not equal to 2."
@@ -128,7 +128,7 @@ def DandY(problem: Problem, epsilon: float) -> Set[Image]:
     References
     ----------
     .. [1] Diakonikolas, I. "Approximation of Multiobjective Optimization Problems ."
-    PhD Thesis, Columbia University, 2011.
+PhD Thesis, Columbia University, 2011.
     """
 
     #get/compute import constants
@@ -197,7 +197,7 @@ def GridFPTAA(problem: Problem, epsilon : float) -> Set[Image]:
     References
     ----------
     .. [1] Helfrich, S.; Herzel, A.; Ruzika, S. & Thielen, C. "An Approximation Algorithm for a General Class of Multi-Parametric Optimization Problems."
-    Journal of Combinatorial Optimization 44, 2022, pp. 1459-1494
+Journal of Combinatorial Optimization 44, 2022, pp. 1459-1494
     """
 
     # helper function to check if in interior

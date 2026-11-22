@@ -23,39 +23,24 @@ def get_epsilon_convex_indicator(images: Set[Image], Y_ESN: Set[Image], type: st
     r'''Get Convex Epsilon Indicator
 
     Determine the epsilon indicator of a sets of images to a reference set that contains all extreme supported nondominated images.
-    This is done by computing
+    This is done by computing::
 
-    \sup_{w \in \R^p_>}  max{1 , \inf_{y' \in Y'} w^T y' /  (inf_{y \in Y} w^T y )} in the case  that all objectives are to be minimized
-    \sup_{w \in \R^p_>}  max{1 , (sup_{y \in Y} w^T y ) / \sup_{y' \in Y'}w^T y' } in the case that all objectives are to be maximized
-        
+        sup_{w > 0}  max{1, min_{y' in Y'} w^T y' / min_{y in Y} w^T y}    (minimization)
+        sup_{w > 0}  max{1, max_{y in Y} w^T y / max_{y' in Y'} w^T y'}    (maximization)
+
     Parameters
     ----------
-    images : Set[Image] of List[Image]
-        Images of approximation set
-        
-    Y_ESN : Set[Image] or List[Image]
-        reference set that that contains all extreme supported nondomianted images
-    
-    type : str (either "min" of "max")
-        string that specifies if the epsilon indicator should be determined for a minimization problem ("min") or a maximization problem ("max")
-
+    ...
     method : str ("grid" or "exact")
-        method that is applied to obtain epsilon convex indicator.
-        "grid" : \sup_{w \in \R^p_>} ... is approxiamted by an additive grid over the weight set (lower bound).
-        "exact" : \sup_{w \in \R^p_>} ... is determined exactly by one linear program per image y of
-            Y_ESN, which maximizes the ratio over the weights for which y is optimal (scipy/HiGHS).
-        "gurobi" : deprecated alias of "exact".
+        Method that is applied to obtain the epsilon convex indicator:
 
-    n : int
-        relevant if method "grid" is chosen. Specifies the densitiy of the grid. Computation time and accuracy increases, if n is chosen larger. 
-
-    Returns
-    -------
-    float
-        epsilon convex indicator of the approxiamtion set. I.e., smallest '\alpha' such that the set 'images' constitutes an 'alpha'-convex approximation set.
-
-    Comment
-    -------
+        - "grid": the supremum over the weight set is approximated by an additive grid (lower bound).
+        - "exact": the supremum is determined exactly by one linear program per image y of Y_ESN,
+          which maximizes the ratio over the weights for which y is optimal (scipy/HiGHS).
+        - "gurobi": deprecated alias of "exact".
+    ...
+    Notes
+    -----
     All images are assumed to be positive.
     '''
     if method == "gurobi":
