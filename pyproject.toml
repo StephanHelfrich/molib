@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "molib"
+version = "0.1.0"
+description = "General exact and approximation methods for multiobjective optimization problems"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.23", "scipy>=1.9"]
+
+[project.optional-dependencies]
+gurobi = ["gurobipy"]
+test = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+include = ["molib*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+addopts = "-ra"
