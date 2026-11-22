@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from molib.core.problem import Problem, Image
+from molib.core.solve import implements
+from molib.scalarizations import EpsilonConstraint, WeightedSum, WeightedTchebycheff
 import numpy as np
 
 
@@ -14,23 +16,26 @@ def _lexargmin(x: np.ndarray) -> int:
     return int(idx[0])
 
 
-class _TchebycheffByEnumeration:
-    """Exact (augmented) weighted Tchebycheff scalarization by enumeration of the rows of self.Y.
+class _EnumerationSolvers:
+    """Exact solvers by enumeration of the rows of self.Y for the weighted Tchebycheff and the
+    epsilon-constraint scalarization.
 
     Ties are broken lexicographically, so the returned image is nondominated also for augmentation = 0.
     """
 
     def weighted_tchebycheff(self, weights, reference_point, augmentation: float = 0.0) -> Image:
-        w = np.asarray(weights, dtype=float)
-        r = np.asarray(reference_point, dtype=float)
-        Y = np.asarray(self.Y, dtype=float)
-        D = Y - r if self.type == "min" else r - Y
-        values = np.max(w * D, axis=1) + augmentation * (D @ w)
-        oriented = Y if self.type == "min" else -Y
-        i = _lexargmin(np.c_[values, oriented])
-        return Image(self.Y[i], solution=i)
+        ...                                     # unverändert
+
+    @implements(WeightedTchebycheff)
+    def _solve_weighted_tchebycheff(self, s: WeightedTchebycheff) -> Image:
+        return self.weighted_tchebycheff(s.weights, s.reference_point, s.augmentation)
+
+    @implements(EpsilonConstraint)
+    def _solve_epsilon_constraint(self, s: EpsilonConstraint):
+        i = s.best_index(self.Y, self.type)
+        return None if i is None else Image(self.Y[i], solution=i)
     
-class ImageSet(_TchebycheffByEnumeration, Problem):
+class ImageSet(_EnumerationSolvers, Problem):
     """
         Problem instance is given by an explicit list of points in the image space,
         weighted sum return an (arbitrary) image that approximates the image minimizing or maximizing the weighted sum.
@@ -62,7 +67,11 @@ class ImageSet(_TchebycheffByEnumeration, Problem):
         image = Image(self.Y[i], solution = i)
         return image
 
-class ImageSet_withLexWS(_TchebycheffByEnumeration, Problem):
+        @implements(WeightedSum, guarantee="solution_quality_weighted_sum")
+        def _solve_weighted_sum(self, s: WeightedSum) -> Image:
+            return self.weighted_sum(s.weights)
+
+class ImageSet_withLexWS(_EnumerationSolvers, Problem):
     """
         Problem instance is given by an explicit list of points in the image space,
         weighted sum return an image minimizing or maximizing a lexicographic version of the weighted sum scalarization. Hence, only extreme supported nondominated images are returned.
@@ -88,6 +97,9 @@ class ImageSet_withLexWS(_TchebycheffByEnumeration, Problem):
         
         image = Image(self.Y[i], solution = i)
         return image
+    @implements(WeightedSum)
+    def _solve_weighted_sum(self, s: WeightedSum) -> Image:
+        return self.weighted_sum(s.weights)
 
     def ixmin(self,x, k=0, idx=None):
         col = x[idx, k] if idx is not None else x[:, k]
