@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=========================================
+==========================================
 Linear programs used by several algorithms
-=========================================
+==========================================
 
 Small linear programs on finite sets of images, solved with ``scipy.optimize.linprog`` (HiGHS).
 They replace the former Gurobi models, so that no commercial solver is required.

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=========================================================================
+==========================================================================================
 General Exact Methods to obtain all optimal image sets for the weighted sum scalarization.
-=========================================================================
+==========================================================================================
 
 Implementation of Outer Approximation Algorithms to compute optimal image sets for the weighted sum scalarization. More precisely,
 Given a multiobjective optimization problem, these methods seek to find a set of images that contain, for each possible weight vecotrs 

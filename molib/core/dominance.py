@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-==================
+===================
 Dominance relations
-==================
+===================
 
 Componentwise comparisons and Pareto dominance with a numerical tolerance, and
 filters that extract the nondominated elements of a finite set of images.
