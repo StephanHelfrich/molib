@@ -57,6 +57,10 @@ def generic_upper_bound(
     w_i = 1 / (u_i - r_i) is solved. If the returned image z lies in the search zone of u
     (z < u), the local upper bound set is updated with z. Otherwise, u is verified.
 
+    For maximization problems, the method is applied to the negated problem g = -f, i.e., with the
+    box [-UB - margin, -LB + margin) and the reference point UB + margin of the original problem.
+    The returned images are those of the original problem.
+
     For augmentation = 0 and an exact scalarization, the minimizer lies in the search zone of u
     whenever the search zone contains an image, since max_i w_i (z_i - r_i) < 1 holds exactly
     for the images z < u. For augmentation > 0, this holds if the augmentation is sufficiently
@@ -65,12 +69,14 @@ def generic_upper_bound(
     Parameters
     ----------
     problem : Problem
-        Minimization problem that implements ``weighted_tchebycheff(weights, reference_point,
-        augmentation)``.
+        Problem that implements ``weighted_tchebycheff(weights, reference_point, augmentation)``
+        with the convention of ``Problem.weighted_tchebycheff`` (for maximization: r_i - f_i with a
+        reference point r above all images).
     LB, UB : float or sequence of float, optional
         Componentwise lower and upper bounds on all nondominated images. Default: problem.LB and
-        problem.UB. UB has to be an upper bound on the nadir point; for three or more objectives,
-        the maxima of the lexicographically optimal images are in general no valid upper bounds.
+        problem.UB. For minimization, UB has to be an upper bound on the nadir point (for
+        maximization, LB a lower bound on it); for three or more objectives, the payoff table
+        does in general not yield such a bound.
     approximation_thresholds : float or sequence of float, optional
         A local upper bound whose box widths are componentwise at most these values is not
         explored. Default: 0 (exact computation).
@@ -90,15 +96,19 @@ def generic_upper_bound(
         Time limit in seconds. If it is reached, the method stops and returns the images found so
         far; the non-verified local upper bounds describe the unexplored region.
     return_upper_bound_set : bool
-        If True, additionally return the final local upper bound set.
+        If True, additionally return the final local upper bound set. For maximization, it refers
+        to the negated problem, i.e., -u are the local lower bounds of the original problem.
 
     Returns
     -------
     Set[Image] or (Set[Image], LocalUpperBoundSet)
         Nondominated images found (with solutions).
     """
-    if problem.type != "min":
-        raise NotImplementedError("The generic upper bound method is implemented for minimization problems only")
+    # For maximization, the method runs on the negated problem g = -f. With the convention of
+    # Problem.weighted_tchebycheff, max_i w_i (r_i - f_i) = max_i w_i (g_i - (-r_i)), so the
+    # scalarization of the original problem with reference point -r is the one of the negated
+    # problem with reference point r.
+    sign = 1.0 if problem.type == "min" else -1.0
 
     p = problem.nr_obj
     if LB is None or UB is None:
@@ -115,15 +125,25 @@ def generic_upper_bound(
     else:
         thresholds = _as_vector(approximation_thresholds, p, "approximation_thresholds")
 
-    reference_point = LB - margin
-    upper_bound_set = LocalUpperBoundSet(reference_point, UB + margin, update_method=update_method)
+    # bounds of the (negated) minimization problem
+    LB_g, UB_g = (LB, UB) if sign > 0 else (-UB, -LB)
+    reference_point = LB_g - margin
+    upper_bound_set = LocalUpperBoundSet(reference_point, UB_g + margin, update_method=update_method)
 
-    found: Set[Image] = set()
+    def to_min(y) -> Image:
+        """Image of the minimization problem; the solutions of y are kept."""
+        if sign > 0:
+            return y
+        g = Image(-np.asarray(y, dtype=float))
+        g.solutions = list(y.solutions)
+        return g
+
+    found: Set[Image] = set()   # images of the original problem
     for y in (initial_images if initial_images is not None else []):
         y = y if isinstance(y, Image) else Image(y)
         if np.any(np.asarray(y) < LB - 1e-9) or np.any(np.asarray(y) > UB + 1e-9):
             raise ValueError(f"Initial image {np.asarray(y).tolist()} is not contained in [LB, UB]")
-        upper_bound_set.update(y)
+        upper_bound_set.update(to_min(y))
         found.add(y)
 
     start = time.perf_counter()
@@ -142,15 +162,17 @@ def generic_upper_bound(
         weights = 1.0 / (np.asarray(u, dtype=float) - reference_point)
         weights = weights / weights.sum()
 
-        z = problem.weighted_tchebycheff(weights.tolist(), reference_point.tolist(), augmentation)
-        if z is not None and strict_leq(z, u):
-            z = z if isinstance(z, Image) else Image(z)
+        y = problem.weighted_tchebycheff(weights.tolist(), (sign * reference_point).tolist(), augmentation)
+        if y is not None:
+            y = y if isinstance(y, Image) else Image(y)
+            z = to_min(y)
+        if y is not None and strict_leq(z, u):
             upper_bound_set.update(z)
-            found.add(z)
+            found.add(y)
         else:
             u.set_verified()
 
-    result = set(nondominated(found))
+    result = set(nondominated(found, sense=problem.type))
     if return_upper_bound_set:
         return result, upper_bound_set
     return result
