@@ -119,12 +119,12 @@ def dual_outer_approximation(problem:Problem) -> Set[Image]:
     if problem.type == "min":
         # determine interior point: take y = f(x,w)/2 and w = (1/K,...(1/K))
         interior_point = np.full((p-1), 1/(p))
-        interior_point = np.append(interior_point, np.matmul(np.append(interior_point, 1/(p)), y) - 100)
+        interior_point = np.append(interior_point, np.matmul(np.append(interior_point, 1/(p)), y) / 2)
         interior_point = np.array(interior_point)
     elif problem.type == "max":
         # determine interior point: take y = f(x,w) + (UB - f(x,w))/2 and w = (1/K,...(1/K))
         interior_point = np.full((p-1), 1/(p))
-        interior_point = np.append(interior_point, np.matmul(np.append(interior_point, 1/(p)), y) + 1)
+        interior_point = np.append(interior_point, (np.matmul(np.append(interior_point, 1/(p)), y) + problem.UB) / 2)
         interior_point = np.array(interior_point)
 
     oa = HalfspaceIntersection(A, interior_point, incremental=True)
@@ -166,7 +166,11 @@ def dual_outer_approximation(problem:Problem) -> Set[Image]:
 
         # solve weighted sum
         # print('solve weighted sum')
-        obj_values = problem.weighted_sum( next_vertex[:-1] + [1 - sum(i for i in next_vertex[:-1])]     )
+                # last weight; clip to zero to avoid negative weights due to rounding
+        last_entry = 1 - sum(i for i in next_vertex[:-1])
+        if last_entry < TOL:
+            last_entry = 0
+        obj_values = problem.weighted_sum( next_vertex[:-1] + [last_entry] )
         supported_images.add(obj_values)
         add_point(L,next_vertex[:-1],p-1)
         # L.append(next_vertex[:-1])
@@ -183,7 +187,7 @@ def dual_outer_approximation(problem:Problem) -> Set[Image]:
             halfspace = [  -obj_values[-1] + i for i in obj_values[:-1] ] + [-1,obj_values[-1]]
         else:
             print('somethings wrong')
-        oa.add_halfspaces([halfspace])
+        oa.add_halfspaces(np.array([halfspace]))
         vertices = oa.intersections.tolist() # better routine needed to avoid redundant tests!!!
 
     oa.close()
@@ -380,7 +384,11 @@ def dual_outer_approximation_double_description(problem:Problem) -> Set[Image]:
 
         #solve routine and update outer and inner approximation
         # get new objectives
-        obj_values = problem.weighted_sum( next_vertex[:-1] + [1 - sum(i for i in next_vertex[:-1])]     )
+        # last weight; clip to zero to avoid negative weights due to rounding
+        last_entry = 1 - sum(i for i in next_vertex[:-1])
+        if last_entry < TOL:
+            last_entry = 0
+        obj_values = problem.weighted_sum( next_vertex[:-1] + [last_entry] )
 
         L.append(next_vertex[:-1])
 
@@ -391,7 +399,7 @@ def dual_outer_approximation_double_description(problem:Problem) -> Set[Image]:
         
         # build halfspace and add it to outer_approximation
         halfspace = [  obj_values[-1] - i for i in obj_values[:-1] ] + [1,-obj_values[-1]]
-        outer_approximation.add_halfspaces([halfspace])
+        outer_approximation.add_halfspaces(np.array([halfspace]))
         vertices = outer_approximation.intersections.tolist()[1:] # better routine needed to avoid redundant tests!!!
 
         # update inner_approximation
